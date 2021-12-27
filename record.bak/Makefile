@@ -3,7 +3,7 @@
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
-SGX_DEBUG ?= 0
+SGX_DEBUG ?= 1
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -99,7 +99,7 @@ Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++03 -nostdinc++
 # Otherwise, you may get some undesirable errors.
 Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
-	-Wl,--start-group -lsgx_tstdc -lsgx_tstdcxx -lsgx_tprotected_fs -l$(Crypto_Library_Name) -l$(Service_Library_Name)  -Wl,--end-group -lpthread \
+	-Wl,--start-group -lsgx_tstdc -lsgx_tcxx -lsgx_tprotected_fs -l$(Crypto_Library_Name) -l$(Service_Library_Name)  -Wl,--end-group -lpthread \
 	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
 	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
 	-Wl,--defsym,__ImageBase=0 \
@@ -199,7 +199,7 @@ enclave.o: enclave.c enclave_t.c
 
 $(Enclave_Name): $(Enclave_C_Objects) enclave_t.o
 	@echo $^
-	@$(CC) $^ -o $@ $(Enclave_Link_Flags) -lc++
+	@$(CC) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
 $(Signed_Enclave_Name): $(Enclave_Name)
@@ -210,3 +210,5 @@ $(Signed_Enclave_Name): $(Enclave_Name)
 
 clean:
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_C_Objects) enclave_u.* $(Enclave_C_Objects) enclave_t.*
+	@rm -f *_recovery
+	@rm -f redis.pfs.conf redis.snapshot
